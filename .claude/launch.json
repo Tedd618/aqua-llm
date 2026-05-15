@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "aqua-llm-dev",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["http-server", "/Users/taehyeon/Projects/aqua-llm", "-p", "8765", "-c-1"],
+      "port": 8765
+    }
+  ]
+}

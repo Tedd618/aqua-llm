@@ -1,0 +1,354 @@
+/* ── Reset ─────────────────────────────────────────────────────── */
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  width: 380px;
+  height: 440px;
+  background: #ffffff;
+  font-family: "SF Pro Display", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  color: #2a2a3a;
+  overflow: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+.app {
+  width: 380px;
+  height: 440px;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #ffffff;
+}
+
+/* ── Bowl container ───────────────────────────────────────────── */
+.tank-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.bowl-svg {
+  width: 300px;
+  height: 340px;
+}
+
+/* ── Container image overlay ──────────────────────────────────── */
+/* Sits on top of the SVG water/fish layer.                        */
+/* multiply blend: white areas let the dark water show through;   */
+/* dark pixel-art outline multiplies to near-black over anything. */
+.container-img {
+  position: absolute;
+  width: 300px;
+  height: 340px;
+  object-fit: fill;
+  image-rendering: pixelated;
+  mix-blend-mode: multiply;
+  pointer-events: none;
+  z-index: 5;
+}
+
+/* Light ray sway */
+#lightRays {
+  animation: rays-sway 8s ease-in-out infinite;
+  transform-origin: 150px 100px;
+}
+
+@keyframes rays-sway {
+  0%, 100% { transform: skewX(-1.5deg); opacity: 0.5; }
+  50% { transform: skewX(1.5deg); opacity: 0.8; }
+}
+
+/* ── Water label (hover) ──────────────────────────────────────── */
+.water-label {
+  position: absolute;
+  bottom: 52%;
+  left: 50%;
+  transform: translateX(-50%);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.05em;
+  color: rgba(70, 100, 115, 0.65);
+  white-space: nowrap;
+  z-index: 10;
+}
+
+.tank-container:hover .water-label {
+  opacity: 1;
+}
+
+.water-sep {
+  margin: 0 3px;
+  opacity: 0.4;
+}
+
+.water-target {
+  opacity: 0.5;
+}
+
+/* ── Overlay buttons (bare icons, no box) ─────────────────────── */
+.btn-overlay {
+  position: absolute;
+  top: 14px;
+  width: 28px;
+  height: 28px;
+  border: none;
+  border-radius: 0;
+  background: none;
+  color: rgba(80, 110, 125, 0.55);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  z-index: 20;
+  padding: 0;
+}
+
+.btn-overlay:hover {
+  color: rgba(60, 90, 105, 0.85);
+  transform: scale(1.1);
+}
+
+.btn-menu { left: 14px; }
+.btn-fish { right: 14px; }
+
+/* ── Overlay common ───────────────────────────────────────────── */
+.overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 100;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.4s ease;
+  cursor: pointer;
+}
+
+.overlay.active {
+  opacity: 1;
+  pointer-events: all;
+}
+
+/* ── Achievement overlay (Alto style) ─────────────────────────── */
+.overlay-achievements {
+  background: rgba(42, 72, 82, 0.55);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.overlay-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0;
+  padding: 0 40px;
+  cursor: default;
+}
+
+/* ── Three goals (Alto style) ─────────────────────────────────── */
+.ach-goals {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+}
+
+.ach-goal {
+  text-align: center;
+  line-height: 1.45;
+}
+
+.ach-goal-text {
+  font-size: 15.5px;
+  font-weight: 500;
+  letter-spacing: 0.005em;
+}
+
+.ach-goal.done .ach-goal-text {
+  color: rgba(255, 255, 255, 0.92);
+}
+
+.ach-goal.locked .ach-goal-text {
+  color: rgba(255, 255, 255, 0.35);
+}
+
+/* ── Stars + level below goals ────────────────────────────────── */
+.ach-footer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: 28px;
+}
+
+.ach-stars {
+  display: flex;
+  gap: 6px;
+  justify-content: center;
+  font-size: 16px;
+}
+
+.ach-star {
+  color: rgba(255, 255, 255, 0.2);
+}
+
+.ach-star.filled {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.ach-level {
+  font-size: 13px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.65);
+  margin-top: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+
+/* ── Collection overlay ───────────────────────────────────────── */
+.overlay-collection {
+  background: rgba(42, 72, 82, 0.55);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.overlay-collection-inner {
+  width: 320px;
+  max-height: 390px;
+  display: flex;
+  flex-direction: column;
+  cursor: default;
+}
+
+.collection-tabs {
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+  margin-bottom: 16px;
+}
+
+.tab {
+  padding: 7px 24px;
+  border: none;
+  border-radius: 0;
+  background: none;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.35);
+  cursor: pointer;
+  transition: all 0.2s;
+  letter-spacing: 0.02em;
+}
+
+.tab.active {
+  background: rgba(255, 255, 255, 0.18);
+  color: rgba(255, 255, 255, 0.9);
+  border-radius: 4px;
+}
+
+.tab:hover:not(.active) {
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.collection-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 2px;
+  overflow-y: auto;
+  padding: 0 4px 8px;
+  height: 320px;
+  align-content: start;
+}
+
+/* Fish grid: 5 columns to fit 29 fish comfortably */
+.collection-grid.grid-fish {
+  grid-template-columns: repeat(5, 1fr);
+}
+
+.collection-grid::-webkit-scrollbar { display: none; }
+
+.collection-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 10px 2px 6px;
+  border-radius: 10px;
+  transition: background 0.2s;
+}
+
+.collection-item:hover {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.collection-icon {
+  width: 40px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 4px;
+}
+
+.collection-icon svg {
+  transition: all 0.3s ease;
+}
+
+.collection-item .collection-icon svg {
+  opacity: 1;
+}
+
+.collection-name {
+  font-size: 9px;
+  font-weight: 600;
+  text-align: center;
+  line-height: 1.2;
+  min-height: 20px;
+  display: flex;
+  align-items: center;
+}
+
+.collection-item.unlocked .collection-name {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.collection-item.locked .collection-name {
+  color: rgba(255, 255, 255, 0.2);
+}
+
+/* ── Collection sprite icons ──────────────────────────────────── */
+/*
+ * Images are grey pixel art on white backgrounds.
+ * invert(1)      → white bg becomes black, grey art becomes light
+ * mix-blend-mode:screen on dark overlay → black disappears, light shows
+ */
+.sprite-icon {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  image-rendering: pixelated;
+  display: block;
+  filter: invert(1);
+  mix-blend-mode: screen;
+  pointer-events: none;
+}
+
+.sprite-locked {
+  opacity: 0.22;
+}
+
+/* ── Surface shimmer on water ─────────────────────────────────── */
+@keyframes surface-shimmer {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 0.8; }
+}

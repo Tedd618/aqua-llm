@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+<body>
+<canvas id="c" width="128" height="128"></canvas>
+<script>
+// Generate simple fish icon at multiple sizes
+function drawIcon(size) {
+  const c = document.createElement('canvas');
+  c.width = size; c.height = size;
+  const ctx = c.getContext('2d');
+  
+  // Background circle
+  ctx.fillStyle = '#2a8a9a';
+  ctx.beginPath();
+  ctx.arc(size/2, size/2, size*0.42, 0, Math.PI*2);
+  ctx.fill();
+  
+  // Fish body
+  ctx.fillStyle = '#ffffff';
+  const cx = size*0.48, cy = size*0.5;
+  const w = size*0.22, h = size*0.12;
+  ctx.beginPath();
+  ctx.ellipse(cx, cy, w, h, 0, 0, Math.PI*2);
+  ctx.fill();
+  
+  // Tail
+  ctx.beginPath();
+  ctx.moveTo(cx-w, cy);
+  ctx.lineTo(cx-w-size*0.08, cy-size*0.08);
+  ctx.lineTo(cx-w-size*0.08, cy+size*0.08);
+  ctx.closePath();
+  ctx.fill();
+  
+  // Eye
+  ctx.fillStyle = '#2a8a9a';
+  ctx.beginPath();
+  ctx.arc(cx+w*0.4, cy-h*0.2, size*0.025, 0, Math.PI*2);
+  ctx.fill();
+  
+  return c;
+}
+</script>
+</body>
+</html>
