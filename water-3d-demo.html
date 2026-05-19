@@ -81,40 +81,90 @@ const rimR     = Math.sqrt(R*R - bowlTopY*bowlTopY); // rim circle radius
 const waterClip   = new THREE.Plane(new THREE.Vector3(0, -1, 0), waterY);
 const bowlTopClip = new THREE.Plane(new THREE.Vector3(0, -1, 0), bowlTopY);
 
-// ── Glass material (very pale, nearly invisible) ──────────────
-const makeGlass = (side) => {
-  const m = new THREE.MeshPhysicalMaterial({
-    color:              0xd8eeff,     // very pale blue tint — makes glass edge visible
-    transmission:       0.90,
-    ior:                1.50,
-    thickness:          0.14,
-    roughness:          0.02,
-    metalness:          0.0,
-    clearcoat:          0.9,
-    clearcoatRoughness: 0.05,
-    attenuationColor:   new THREE.Color(0x90b8e0),
-    attenuationDistance:1.2,
-    envMapIntensity:    0.0,
-    clippingPlanes:     [bowlTopClip],
-    side,
-    depthWrite: false,
-  });
-  if (side === THREE.FrontSide) {
-    m.onBeforeCompile = sh => {
-      sh.fragmentShader = sh.fragmentShader.replace(
-        '#include <output_fragment>',
-        `float rim = pow(1.0 - abs(dot(normalize(vNormal), normalize(vViewPosition))), 5.0);
-         outgoingLight += vec3(0.55, 0.72, 0.92) * rim * 0.65;
-         #include <output_fragment>`
-      );
-    };
+// ── FBO for Liquid Glass screen-space refraction ──────────────
+const fbo = new THREE.WebGLRenderTarget(
+  W * Math.min(devicePixelRatio, 2),
+  H * Math.min(devicePixelRatio, 2),
+  { minFilter: THREE.LinearFilter, magFilter: THREE.LinearFilter }
+);
+
+// ── Liquid Glass shader (Apple iOS 26 principles) ─────────────
+// • Per-channel IOR → chromatic aberration
+// • Screen-space refraction via FBO
+// • 4-light Blinn-Phong specular
+// • Top-biased Fresnel rim glow
+// • Cool blue tint vec3(0.92, 0.95, 1.05)
+const lgVert = /* glsl */`
+  varying vec3 vWorldNormal;
+  varying vec3 vWorldPos;
+  varying vec4 vClipPos;
+  void main() {
+    vec4 wp     = modelMatrix * vec4(position, 1.0);
+    vWorldPos    = wp.xyz;
+    vWorldNormal = normalize(mat3(transpose(inverse(modelMatrix))) * normal);
+    vClipPos     = projectionMatrix * viewMatrix * wp;
+    gl_Position  = vClipPos;
   }
-  return m;
-};
+`;
+const lgFrag = /* glsl */`
+  uniform sampler2D uSceneTex;
+  uniform vec3      uCamPos;
+  uniform float     uIorR;
+  uniform float     uIorG;
+  uniform float     uIorB;
+  uniform float     uRefract;
+  uniform float     uChroma;
+  uniform float     uClipY;
+  varying vec3 vWorldNormal;
+  varying vec3 vWorldPos;
+  varying vec4 vClipPos;
+  void main() {
+    if (vWorldPos.y > uClipY) discard;
+    vec3 N = normalize(vWorldNormal);
+    vec3 V = normalize(uCamPos - vWorldPos);
+    vec2 uv = (vClipPos.xy / vClipPos.w) * 0.5 + 0.5;
+    vec3 rR = refract(-V, N, 1.0 / uIorR);
+    vec3 rG = refract(-V, N, 1.0 / uIorG);
+    vec3 rB = refract(-V, N, 1.0 / uIorB);
+    float r = texture2D(uSceneTex, uv + rR.xy * uRefract * uChroma).r;
+    float g = texture2D(uSceneTex, uv + rG.xy * uRefract          ).g;
+    float b = texture2D(uSceneTex, uv + rB.xy * uRefract * uChroma).b;
+    vec3 color = vec3(r, g, b);
+    color = mix(color, color * vec3(0.92, 0.95, 1.05), 0.35);
+    vec3 H1 = normalize(V + normalize(vec3( 0.40,  0.70, 1.0)));
+    vec3 H2 = normalize(V + normalize(vec3(-0.30, -0.50, 1.0)));
+    vec3 H3 = normalize(V + normalize(vec3( 0.00,  0.90, 0.4)));
+    color += vec3(pow(max(dot(N,H1),0.0),90.0)
+                + pow(max(dot(N,H2),0.0),50.0)*0.28
+                + pow(max(dot(N,H3),0.0),120.0)*0.55
+                + pow(max(dot(N,normalize(vec3(0.10,0.30,1.0))),0.0),6.0)*0.08) * 0.85;
+    float fresnel = pow(1.0 - abs(dot(V, N)), 4.0);
+    color += vec3(0.60, 0.78, 1.00) * fresnel * (0.5 + 0.5 * N.y) * 0.55;
+    gl_FragColor = vec4(color, mix(0.04, 0.55, fresnel));
+  }
+`;
 
 const shellGeo = new THREE.SphereGeometry(R, 80, 80);
-const outer = new THREE.Mesh(shellGeo, makeGlass(THREE.FrontSide));
-const inner = new THREE.Mesh(shellGeo, makeGlass(THREE.BackSide));
+const liquidGlassMat = new THREE.ShaderMaterial({
+  vertexShader: lgVert, fragmentShader: lgFrag,
+  uniforms: {
+    uSceneTex: { value: null },
+    uCamPos:   { value: camera.position },
+    uIorR:     { value: 1.490 },
+    uIorG:     { value: 1.500 },
+    uIorB:     { value: 1.520 },
+    uRefract:  { value: 0.38  },
+    uChroma:   { value: 0.055 },
+    uClipY:    { value: bowlTopY },
+  },
+  transparent: true, side: THREE.FrontSide, depthWrite: false,
+});
+const outer = new THREE.Mesh(shellGeo, liquidGlassMat);
+const inner = new THREE.Mesh(shellGeo, new THREE.MeshPhysicalMaterial({
+  color: 0xd0e8ff, transmission: 0.96, ior: 1.50, thickness: 0.08,
+  roughness: 0.0, clearcoat: 0.5, envMapIntensity: 0.0,
+  clippingPlanes: [bowlTopClip], side: THREE.BackSide, depthWrite: false,
+}));
 inner.scale.setScalar(0.978);
 inner.renderOrder = -1;
 scene.add(outer, inner);
@@ -278,6 +328,7 @@ function animate() {
   controls.update();
   const t = clock.getElapsedTime();
   waterSurface.material.uniforms.time.value = t;
+  liquidGlassMat.uniforms.uCamPos.value.copy(camera.position);
   for (const b of bubbles) {
     const d = b._d;
     b.position.y += d.spd * 0.007;
@@ -290,6 +341,15 @@ function animate() {
       b.position.y = -R + 0.08;
     }
   }
+  // Pass 1: capture scene without outer glass
+  outer.visible = false;
+  renderer.setRenderTarget(fbo);
+  renderer.render(scene, camera);
+  renderer.setRenderTarget(null);
+  outer.visible = true;
+
+  // Pass 2: render with Liquid Glass
+  liquidGlassMat.uniforms.uSceneTex.value = fbo.texture;
   renderer.render(scene, camera);
 }
 animate();
