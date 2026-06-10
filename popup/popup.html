@@ -9,48 +9,9 @@
 <body>
   <div class="app" id="app">
 
-    <!-- ── Bowl / Tank (centered on white) ─────────────────── -->
+    <!-- ── 3D Bowl (replaces SVG) ────────────────────────────── -->
     <div class="tank-container" id="tankContainer">
-      <svg id="bowlSvg" class="bowl-svg" viewBox="0 0 300 340">
-        <defs>
-          <!-- Water gradient — dark charcoal, matches pixel art outline colour -->
-          <linearGradient id="waterGrad" x1="0" y1="0" x2="0" y2="1">
-            <stop id="waterTop" offset="0%" stop-color="#4a4a4a" stop-opacity="1" />
-            <stop id="waterMid" offset="50%" stop-color="#383838" stop-opacity="1" />
-            <stop id="waterBot" offset="100%" stop-color="#282828" stop-opacity="1" />
-          </linearGradient>
-
-          <!-- Light ray gradient — faint white streaks in dark water -->
-          <linearGradient id="lightRay" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stop-color="#ffffff" stop-opacity="0.10" />
-            <stop offset="100%" stop-color="#ffffff" stop-opacity="0" />
-          </linearGradient>
-        </defs>
-
-        <g id="tankContents">
-          <!-- Water fill (rect, position controlled by JS) -->
-          <rect id="waterFill" x="0" y="160" width="300" height="200" fill="url(#waterGrad)" />
-
-          <!-- Light rays -->
-          <g id="lightRays" opacity="0.6">
-            <polygon points="100,100 112,340 88,340" fill="url(#lightRay)" />
-            <polygon points="170,100 185,340 158,340" fill="url(#lightRay)" />
-            <polygon points="230,100 245,340 218,340" fill="url(#lightRay)" />
-          </g>
-
-          <!-- Decorations (populated by renderer) -->
-          <g id="decorations"></g>
-
-          <!-- Fish (populated by renderer) -->
-          <g id="fishGroup"></g>
-
-          <!-- Bubbles (populated by renderer) -->
-          <g id="bubbles"></g>
-        </g>
-      </svg>
-
-      <!-- Container image overlay — changes per tier, sits on top via multiply blend -->
-      <img id="containerImg" class="container-img" src="../assets/tanks/round_fish_tank.png" alt="tank">
+      <canvas id="bowlCanvas" width="380" height="440"></canvas>
 
       <!-- Water label on hover -->
       <div class="water-label" id="waterLabel">
@@ -76,28 +37,29 @@
       </svg>
     </button>
 
-    <!-- ── Achievement overlay (Alto style: full blur + centered text) ── -->
+    <!-- ── Achievement overlay ──────────────────────────────── -->
     <div class="overlay overlay-achievements" id="overlayAchievements">
       <div class="overlay-content" id="achievementContent">
         <!-- Populated by JS -->
       </div>
     </div>
 
-    <!-- ── Collection overlay ──────────────────────────────── -->
+    <!-- ── Collection overlay (Fish only) ───────────────────── -->
     <div class="overlay overlay-collection" id="overlayCollection">
       <div class="overlay-collection-inner">
-        <div class="collection-tabs">
-          <button class="tab active" data-tab="fish">Fish</button>
-          <button class="tab" data-tab="tanks">Tanks</button>
-        </div>
-        <div class="collection-grid" id="collectionGrid"></div>
+        <div class="collection-grid grid-fish" id="collectionGrid"></div>
       </div>
     </div>
 
   </div>
 
   <script src="../lib/tank-config.js"></script>
-  <script src="tank-renderer.js"></script>
+  <script type="module">
+    import * as THREE from '../lib/three/three.module.js';
+    // Make THREE available to bowl-3d.js (classic script)
+    window.__THREE__ = THREE;
+  </script>
+  <script src="bowl-3d.js"></script>
   <script src="popup.js"></script>
 </body>
 </html>

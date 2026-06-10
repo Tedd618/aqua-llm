@@ -29,9 +29,10 @@ body {
   justify-content: center;
 }
 
-.bowl-svg {
-  width: 300px;
-  height: 340px;
+.bowl-svg, #bowlCanvas {
+  width: 380px;
+  height: 440px;
+  display: block;
 }
 
 /* ── Container image overlay ──────────────────────────────────── */
